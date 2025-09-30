@@ -1,7 +1,6 @@
 // Configuración inicial
 const apiBaseUrl = 'https://pokeapi.co/api/v2';
-const POKEMON_LIMIT_INITIAL = 50;
-const POKEMON_LIMIT_INCREMENT = 50;
+const POKEMON_LIMIT = 1030;
 
 // Mapeo de generaciones por rangos de IDs
 const generationRanges = {
@@ -29,7 +28,6 @@ let filteredPokemon = [];
 const pokemonCache = {};
 let currentPage = 1;
 const itemsPerPage = 20;
-let currentPokemonLimit = POKEMON_LIMIT_INITIAL;
 let searchTimeout = null;
 
 // Elementos del DOM
@@ -46,7 +44,7 @@ const pageInfo = document.getElementById('pageInfo');
 const pokemonModal = document.getElementById('pokemonModal');
 const modalBody = document.getElementById('modalBody');
 const closeModal = document.querySelector('.close');
-const loadMoreBtn = document.getElementById('loadMoreBtn');
+
 
 // Inicializar la aplicación
 document.addEventListener('DOMContentLoaded', function() {
@@ -105,8 +103,6 @@ function setupEventListeners() {
         }
     });
     
-    // Load more Pokémon
-    loadMoreBtn.addEventListener('click', loadMorePokemon);
 }
 
 // Cargar tipos en el filtro
@@ -123,10 +119,9 @@ function loadTypeFilter() {
 async function loadAllPokemon() {
     try {
         showLoading('Cargando Pokémon...');
-        loadMoreBtn.disabled = true;
         
         // Obtener la lista de Pokémon 
-        const response = await fetch(`${apiBaseUrl}/pokemon?limit=${currentPokemonLimit}`);
+        const response = await fetch(`${apiBaseUrl}/pokemon?limit=${POKEMON_LIMIT}`);
 
         if (!response.ok) {
             throw new Error(`Error HTTP: ${response.status}`);
@@ -162,15 +157,7 @@ async function loadAllPokemon() {
         
         // Mostrar Pokémon en la tabla
         displayPokemonPage();
-        
-        hideLoading();
-        loadMoreBtn.disabled = false;
 
-        if (allPokemon.length >= currentPokemonLimit) {
-            loadMoreBtn.style.display = 'block';
-        } else {
-            loadMoreBtn.style.display = 'none';
-        }
 
         showStatusMessage(`¡Listo! Se cargaron ${allPokemon.length} Pokémon`, 'success');
         console.log('Pokémon cargados y mostrados en tabla');
@@ -182,67 +169,6 @@ async function loadAllPokemon() {
     }
 }
 
-// Cargar más Pokémon
-async function loadMorePokemon() {
-    try {
-        loadMoreBtn.disabled = true;
-        loadMoreBtn.innerHTML = '<span class="spinner"></span>Cargando...';
-        
-        currentPokemonLimit += POKEMON_LIMIT_INCREMENT;
-        
-        // Obtener la lista de Pokémon actualizada
-        const response = await fetch(`${apiBaseUrl}/pokemon?limit=${currentPokemonLimit}`);
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
-        const data = await response.json();
-        
-        // Obtener solo los nuevos Pokémon
-        const newPokemonUrls = data.results.slice(allPokemon.length);
-        
-        if (newPokemonUrls.length === 0) {
-            showStatusMessage('¡No hay más Pokémon para cargar!', 'success');
-            loadMoreBtn.style.display = 'none';
-            return;
-        }
-        
-        showStatusMessage(`Cargando ${newPokemonUrls.length} Pokémon adicionales...`, 'info');
-        
-        // Obtener detalles de los nuevos Pokémon
-        const newPokemonDetails = [];
-        for (let i = 0; i < newPokemonUrls.length; i++) {
-            const pokemon = newPokemonUrls[i];
-            
-            try {
-                const pokemonData = await fetchPokemonDetails(pokemon.url);
-                newPokemonDetails.push(pokemonData);
-            } catch (error) {
-                console.warn(`Error cargando ${pokemon.name}:`, error);
-            }
-        }
-        
-        // Agregar nuevos Pokémon a la lista
-        allPokemon = [...allPokemon, ...newPokemonDetails].sort((a, b) => a.id - b.id);
-        filteredPokemon = [...allPokemon];
-        
-        // Actualizar la tabla
-        displayPokemonPage();
-        
-        showStatusMessage(`¡Se agregaron ${newPokemonDetails.length} Pokémon!`, 'success');
-        console.log(`Total de Pokémon: ${allPokemon.length}`);
-        
-    } catch (error) {
-        console.error('Error al cargar más Pokémon:', error);
-        showStatusMessage('Error al cargar más Pokémon', 'error');
-    } finally {
-        loadMoreBtn.disabled = false;
-        loadMoreBtn.innerHTML = 'Cargar Más Pokémon';
-        
-        if (allPokemon.length >= currentPokemonLimit) {
-            loadMoreBtn.style.display = 'block';
-        }
-    }
-}
 
 async function fetchPokemonDetails(url) {
     const pokemonName = url.split('/').filter(Boolean).pop();

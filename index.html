@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokédex - Explorador de Pokémon</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Pokédex Interactiva</h1>
+            <p class="subtitle">Explora todos los Pokémon con filtros avanzados</p>
+        </header>
+        
+        <div class="controls">
+            <div class="search-section">
+                <input type="text" id="searchInput" placeholder="Buscar Pokémon por nombre...">
+                <button id="searchBtn">Buscar</button>
+                <button id="clearBtn">Limpiar</button>
+            </div>
+            
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="typeFilter">Filtrar por Tipo:</label>
+                    <select id="typeFilter">
+                        <option value="">Todos los tipos</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="generationFilter">Filtrar por Generación:</label>
+                    <select id="generationFilter">
+                        <option value="">Todas las generaciones</option>
+                        <option value="1">Generación 1 (Kanto)</option>
+                        <option value="2">Generación 2 (Johto)</option>
+                        <option value="3">Generación 3 (Hoenn)</option>
+                        <option value="4">Generación 4 (Sinnoh)</option>
+                        <option value="5">Generación 5 (Teselia)</option>
+                        <option value="6">Generación 6 (Kalos)</option>
+                        <option value="7">Generación 7 (Alola)</option>
+                        <option value="8">Generación 8 (Galar)</option>
+                        <option value="9">Generación 9 (Paldea)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table id="pokemonTable">
+                <thead>
+                    <tr>
+                        <th>Imagen</th>
+                        <th>Nombre</th>
+                        <th>Tipo</th>
+                        <th>Peso</th>
+                        <th>Altura</th>
+                        <th>ID</th>
+                    </tr>
+                </thead>
+                <tbody id="pokemonTableBody">
+                    <!-- Los datos de Pokémon se cargarán aquí -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="loadingMessage" class="loading">Cargando Pokémon...</div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

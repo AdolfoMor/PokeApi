@@ -265,10 +265,9 @@ function updateResultsCounter() {
     } else {
         const start = ((currentPage - 1) * itemsPerPage) + 1;
         const end = Math.min(currentPage * itemsPerPage, total);
-        resultsCount.textContent = `${start}-${end} de ${total} Pokémon`;
+        resultsCount.textContent = `Mostrando ${start}-${end} de ${total} Pokémon`;
     }
 }
-
 // Mostrar detalles del Pokémon en modal
 async function showPokemonDetails(pokemon) {
     try {
@@ -427,7 +426,7 @@ function applyFilters() {
     // Resetear a primera página después de filtrar
     currentPage = 1;
     displayPokemonPage();
-    
+    updateResultsCounter(); 
     console.log(`Filtros aplicados: ${filteredPokemon.length} Pokémon encontrados`);
     
     // Mostrar mensaje si no hay resultados

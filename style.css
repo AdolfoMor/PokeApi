@@ -520,7 +520,6 @@ tr:hover {
     margin-right: 10px;
 }
 
-/* Results Info */
 .results-info {
     text-align: center;
     margin: 15px 0;
@@ -534,8 +533,33 @@ tr:hover {
     padding: 8px 16px;
     border-radius: 20px;
     backdrop-filter: blur(10px);
+    display: inline-block;
+    max-width: 90%;
+    word-break: keep-all;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+/* Para móviles pequeños */
+@media (max-width: 480px) {
+    .results-info {
+        margin: 10px 0;
+    }
+    
+    .results-info span {
+        font-size: 0.9rem;
+        padding: 6px 12px;
+        max-width: 95%;
+    }
+}
+
+/* Para tablets */
+@media (max-width: 768px) {
+    .results-info span {
+        font-size: 1rem;
+    }
+}
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }

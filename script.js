@@ -36,7 +36,7 @@ const searchBtn = document.getElementById('searchBtn');
 const clearBtn = document.getElementById('clearBtn');
 const typeFilter = document.getElementById('typeFilter');
 const generationFilter = document.getElementById('generationFilter');
-const loadingMessage = document.getElementById('loadingMessage');
+const loadingOverlay = document.getElementById('loadingOverlay');
 const pokemonTableBody = document.getElementById('pokemonTableBody');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
@@ -44,6 +44,7 @@ const pageInfo = document.getElementById('pageInfo');
 const pokemonModal = document.getElementById('pokemonModal');
 const modalBody = document.getElementById('modalBody');
 const closeModal = document.querySelector('.close');
+const resultsCount = document.getElementById('resultsCount');
 
 
 // Inicializar la aplicación
@@ -118,54 +119,35 @@ function loadTypeFilter() {
 
 async function loadAllPokemon() {
     try {
-        showLoading('Cargando Pokémon...');
+        loadingOverlay.style.display = 'flex';
         
-        // Obtener la lista de Pokémon 
-        const response = await fetch(`${apiBaseUrl}/pokemon?limit=${POKEMON_LIMIT}`);
-
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
-
+        // Obtener el total de Pokémon
+        const countResponse = await fetch(`${apiBaseUrl}/pokemon?limit=1`);
+        const countData = await countResponse.json();
+        const totalCount = countData.count;
+        
+        // Cargar todos los Pokémon de una vez
+        const response = await fetch(`${apiBaseUrl}/pokemon?limit=${totalCount}`);
         const data = await response.json();
         
-        console.log(`Obtenidos ${data.results.length} Pokémon`);
-
-        showLoading(`Cargando detalles de Pokémon... (0/${data.results.length})`);
-        
-        // Obtener detalles de cada Pokémon
-        const pokemonDetails = [];
-        for (let i = 0; i < data.results.length; i++) {
-            const pokemon = data.results[i];
-            
-            // Actualizar progreso cada 10 Pokémon
-            if (i % 10 === 0) {
-                showLoading(`Cargando detalles de Pokémon... (${i}/${data.results.length})`);
-            }
-            
-            try {
-                const pokemonData = await fetchPokemonDetails(pokemon.url);
-                pokemonDetails.push(pokemonData);
-            } catch (error) {
-                console.warn(`Error cargando ${pokemon.name}:`, error);
-                // Continuar con los siguientes Pokémon
-            }
-        }
+        // Cargar detalles (esto puede tomar unos segundos)
+        const pokemonDetails = await Promise.all(
+            data.results.map(pokemon => fetchPokemonDetails(pokemon.url))
+        );
         
         allPokemon = pokemonDetails.sort((a, b) => a.id - b.id);
         filteredPokemon = [...allPokemon];
         
-        // Mostrar Pokémon en la tabla
         displayPokemonPage();
-
-
-        showStatusMessage(`¡Listo! Se cargaron ${allPokemon.length} Pokémon`, 'success');
-        console.log('Pokémon cargados y mostrados en tabla');
+        updateResultsCounter();
+        loadingOverlay.style.display = 'none';
+        
+        console.log(`Carga completada: ${allPokemon.length} Pokémon`);
         
     } catch (error) {
-        console.error('Error al cargar Pokémon:', error);
-        showLoading('Error al cargar los datos. Intenta recargar la página.');
-        showStatusMessage('Error al cargar los Pokémon. Verifica tu conexión.', 'error');
+        console.error('Error:', error);
+        loadingOverlay.style.display = 'none';
+        showStatusMessage('Error al cargar los Pokémon', 'error');
     }
 }
 
@@ -199,7 +181,6 @@ function displayPokemonPage() {
     
     displayPokemon(pokemonToShow);
     updatePaginationControls();
-    updateResultsCount();
 }
 
 
@@ -271,6 +252,21 @@ function displayPokemon(pokemonList) {
     });
     
     console.log(`Mostrados ${pokemonList.length} Pokémon en la tabla`);
+}
+
+function updateResultsCounter() {
+    const total = filteredPokemon.length;
+    const showing = Math.min(total, itemsPerPage);
+    
+    if (total === 0) {
+        resultsCount.textContent = '0 Pokémon';
+    } else if (total <= itemsPerPage) {
+        resultsCount.textContent = `${total} Pokémon`;
+    } else {
+        const start = ((currentPage - 1) * itemsPerPage) + 1;
+        const end = Math.min(currentPage * itemsPerPage, total);
+        resultsCount.textContent = `${start}-${end} de ${total} Pokémon`;
+    }
 }
 
 // Mostrar detalles del Pokémon en modal
@@ -377,32 +373,6 @@ function updatePaginationControls() {
         totalPages <= 1 ? 'none' : 'flex';
 }
 
-// Actualizar contador de resultados
-function updateResultsCount() {
-    let countElement = document.querySelector('.results-count');
-    
-    if (!countElement) {
-        countElement = document.createElement('div');
-        countElement.className = 'results-count';
-        document.querySelector('.table-container').insertBefore(
-            countElement, 
-            document.querySelector('#pokemonTable')
-        );
-    }
-    
-    const total = filteredPokemon.length;
-    const start = Math.min((currentPage - 1) * itemsPerPage + 1, total);
-    const end = Math.min(currentPage * itemsPerPage, total);
-    
-    if (total === 0) {
-        countElement.textContent = 'No se encontraron Pokémon';
-    } else if (total <= itemsPerPage) {
-        countElement.textContent = `Mostrando ${total} Pokémon`;
-    } else {
-        countElement.textContent = `Mostrando ${start}-${end} de ${total} Pokémon`;
-    }
-}
-
 // Navegación de páginas
 function goToPreviousPage() {
     if (currentPage > 1) {
@@ -497,16 +467,6 @@ function hideSearchIndicator() {
     }
 }
 
-// Función para mostrar mensaje de carga
-function showLoading(message) {
-    loadingMessage.textContent = message;
-    loadingMessage.style.display = 'block';
-}
-
-// Función para ocultar mensaje de carga
-function hideLoading() {
-    loadingMessage.style.display = 'none';
-}
 
 // Mostrar mensaje de estado temporal
 function showStatusMessage(message, type = 'info') {
@@ -531,3 +491,11 @@ function showStatusMessage(message, type = 'info') {
         }
     }, 5000);
 }
+
+updateResultsCounter();
+ 
+updateResultsCounter();
+
+updateResultsCounter();
+
+updateResultsCounter();

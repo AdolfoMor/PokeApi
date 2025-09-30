@@ -45,6 +45,10 @@
                 </div>
             </div>
         </div>
+
+        <div class="results-info">
+            <span id="resultsCount"></span>
+        </div>
         
         <div class="table-container">
             <table id="pokemonTable">
@@ -64,7 +68,10 @@
             </table>
         </div>
         
-        <div id="loadingMessage" class="loading">Cargando Pokémon...</div>
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="pokeball-spinner"></div>
+            <p class="loading-text">Cargando Pokémon...</p>
+        </div>
         <!-- Controles de paginación -->
         <div class="pagination-controls">
             <button id="prevBtn" disabled>Anterior</button>

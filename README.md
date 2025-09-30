@@ -3,7 +3,7 @@ Una aplicación web moderna que consume la **PokéAPI** para mostrar informació
 
 ## Puede acceder a la aplicación dando clic en el siguiente enlace
 
-[https://www.pokeapi-semujer.duckdns.org/](https://www.pokeapi-semujer.duckdns.org/)
+[https://poke-api-jade-six.vercel.app/](https://poke-api-jade-six.vercel.app/)
 
 ![Vista Principal](Img/Inicio.png)
 

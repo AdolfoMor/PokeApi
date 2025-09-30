@@ -1,6 +1,7 @@
 // Configuración inicial
 const apiBaseUrl = 'https://pokeapi.co/api/v2';
-const POKEMON_LIMIT = 150;
+const POKEMON_LIMIT_INITIAL = 50;
+const POKEMON_LIMIT_INCREMENT = 50;
 
 // Mapeo de generaciones por rangos de IDs
 const generationRanges = {
@@ -28,6 +29,8 @@ let filteredPokemon = [];
 const pokemonCache = {};
 let currentPage = 1;
 const itemsPerPage = 20;
+let currentPokemonLimit = POKEMON_LIMIT_INITIAL;
+let searchTimeout = null;
 
 // Elementos del DOM
 const searchInput = document.getElementById('searchInput');
@@ -40,6 +43,10 @@ const pokemonTableBody = document.getElementById('pokemonTableBody');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
 const pageInfo = document.getElementById('pageInfo');
+const pokemonModal = document.getElementById('pokemonModal');
+const modalBody = document.getElementById('modalBody');
+const closeModal = document.querySelector('.close');
+const loadMoreBtn = document.getElementById('loadMoreBtn');
 
 // Inicializar la aplicación
 document.addEventListener('DOMContentLoaded', function() {
@@ -60,10 +67,21 @@ function setupEventListeners() {
     searchBtn.addEventListener('click', applyFilters);
     clearBtn.addEventListener('click', clearFilters);
     
-    searchInput.addEventListener('keyup', function(event) {
-        if (event.key === 'Enter') {
-            applyFilters();
+    searchInput.addEventListener('input', function() {
+        // Mostrar indicador de búsqueda
+        showSearchIndicator();
+        
+        // Clear previous timeout
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
         }
+        
+        // Set new timeout
+        searchTimeout = setTimeout(() => {
+            currentPage = 1;
+            applyFilters();
+            hideSearchIndicator();
+        }, 500);
     });
     
     typeFilter.addEventListener('change', function() {
@@ -78,6 +96,17 @@ function setupEventListeners() {
     
     prevBtn.addEventListener('click', goToPreviousPage);
     nextBtn.addEventListener('click', goToNextPage);
+
+    // Modal events
+    closeModal.addEventListener('click', closePokemonModal);
+    window.addEventListener('click', function(event) {
+        if (event.target === pokemonModal) {
+            closePokemonModal();
+        }
+    });
+    
+    // Load more Pokémon
+    loadMoreBtn.addEventListener('click', loadMorePokemon);
 }
 
 // Cargar tipos en el filtro
@@ -94,9 +123,10 @@ function loadTypeFilter() {
 async function loadAllPokemon() {
     try {
         showLoading('Cargando Pokémon...');
+        loadMoreBtn.disabled = true;
         
         // Obtener la lista de Pokémon 
-        const response = await fetch(`${apiBaseUrl}/pokemon?limit=${POKEMON_LIMIT}`);
+        const response = await fetch(`${apiBaseUrl}/pokemon?limit=${currentPokemonLimit}`);
 
         if (!response.ok) {
             throw new Error(`Error HTTP: ${response.status}`);
@@ -131,9 +161,16 @@ async function loadAllPokemon() {
         filteredPokemon = [...allPokemon];
         
         // Mostrar Pokémon en la tabla
-        displayPokemon(filteredPokemon);
+        displayPokemonPage();
         
         hideLoading();
+        loadMoreBtn.disabled = false;
+
+        if (allPokemon.length >= currentPokemonLimit) {
+            loadMoreBtn.style.display = 'block';
+        } else {
+            loadMoreBtn.style.display = 'none';
+        }
 
         showStatusMessage(`¡Listo! Se cargaron ${allPokemon.length} Pokémon`, 'success');
         console.log('Pokémon cargados y mostrados en tabla');
@@ -142,6 +179,68 @@ async function loadAllPokemon() {
         console.error('Error al cargar Pokémon:', error);
         showLoading('Error al cargar los datos. Intenta recargar la página.');
         showStatusMessage('Error al cargar los Pokémon. Verifica tu conexión.', 'error');
+    }
+}
+
+// Cargar más Pokémon
+async function loadMorePokemon() {
+    try {
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.innerHTML = '<span class="spinner"></span>Cargando...';
+        
+        currentPokemonLimit += POKEMON_LIMIT_INCREMENT;
+        
+        // Obtener la lista de Pokémon actualizada
+        const response = await fetch(`${apiBaseUrl}/pokemon?limit=${currentPokemonLimit}`);
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        const data = await response.json();
+        
+        // Obtener solo los nuevos Pokémon
+        const newPokemonUrls = data.results.slice(allPokemon.length);
+        
+        if (newPokemonUrls.length === 0) {
+            showStatusMessage('¡No hay más Pokémon para cargar!', 'success');
+            loadMoreBtn.style.display = 'none';
+            return;
+        }
+        
+        showStatusMessage(`Cargando ${newPokemonUrls.length} Pokémon adicionales...`, 'info');
+        
+        // Obtener detalles de los nuevos Pokémon
+        const newPokemonDetails = [];
+        for (let i = 0; i < newPokemonUrls.length; i++) {
+            const pokemon = newPokemonUrls[i];
+            
+            try {
+                const pokemonData = await fetchPokemonDetails(pokemon.url);
+                newPokemonDetails.push(pokemonData);
+            } catch (error) {
+                console.warn(`Error cargando ${pokemon.name}:`, error);
+            }
+        }
+        
+        // Agregar nuevos Pokémon a la lista
+        allPokemon = [...allPokemon, ...newPokemonDetails].sort((a, b) => a.id - b.id);
+        filteredPokemon = [...allPokemon];
+        
+        // Actualizar la tabla
+        displayPokemonPage();
+        
+        showStatusMessage(`¡Se agregaron ${newPokemonDetails.length} Pokémon!`, 'success');
+        console.log(`Total de Pokémon: ${allPokemon.length}`);
+        
+    } catch (error) {
+        console.error('Error al cargar más Pokémon:', error);
+        showStatusMessage('Error al cargar más Pokémon', 'error');
+    } finally {
+        loadMoreBtn.disabled = false;
+        loadMoreBtn.innerHTML = 'Cargar Más Pokémon';
+        
+        if (allPokemon.length >= currentPokemonLimit) {
+            loadMoreBtn.style.display = 'block';
+        }
     }
 }
 
@@ -189,7 +288,11 @@ function displayPokemon(pokemonList) {
     
     pokemonList.forEach(pokemon => {
         const row = document.createElement('tr');
-        
+        row.className = 'pokemon-row';
+
+        // Hacer la fila clickeable
+        row.addEventListener('click', () => showPokemonDetails(pokemon));
+
         // Imagen
         const imgCell = document.createElement('td');
         const img = document.createElement('img');
@@ -242,6 +345,94 @@ function displayPokemon(pokemonList) {
     });
     
     console.log(`Mostrados ${pokemonList.length} Pokémon en la tabla`);
+}
+
+// Mostrar detalles del Pokémon en modal
+async function showPokemonDetails(pokemon) {
+    try {
+        // Mostrar contenido de carga en el modal
+        modalBody.innerHTML = `
+            <div class="modal-pokemon">
+                <div class="modal-header">
+                    <div class="skeleton skeleton-text" style="width: 100px; margin: 0 auto 10px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 150px; margin: 0 auto 20px; height: 2rem;"></div>
+                </div>
+                <div class="modal-pokemon-image skeleton"></div>
+                <div class="modal-types">
+                    <div class="skeleton skeleton-text" style="width: 80px; height: 30px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 80px; height: 30px;"></div>
+                </div>
+                <div class="modal-stats">
+                    ${Array(6).fill('<div class="stat-item"><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text"></div></div>').join('')}
+                </div>
+            </div>
+        `;
+        
+        pokemonModal.style.display = 'block';
+        
+        // Obtener datos adicionales si es necesario
+        const pokemonData = await fetchPokemonDetails(`https://pokeapi.co/api/v2/pokemon/${pokemon.id}`);
+        
+        // Mostrar datos reales
+        modalBody.innerHTML = `
+            <div class="modal-pokemon">
+                <div class="modal-header">
+                    <div class="modal-pokemon-id">#${pokemonData.id.toString().padStart(3, '0')}</div>
+                    <h2 class="modal-pokemon-name">${pokemonData.name}</h2>
+                </div>
+                <div class="modal-pokemon-image">
+                    <img src="${pokemonData.sprites.other['official-artwork'].front_default || pokemonData.sprites.front_default}" alt="${pokemonData.name}">
+                </div>
+                <div class="modal-types">
+                    ${pokemonData.types.map(type => 
+                        `<span class="type-badge ${type.type.name}">${type.type.name}</span>`
+                    ).join('')}
+                </div>
+                <div class="modal-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Altura</div>
+                        <div class="stat-value">${pokemonData.height / 10} m</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Peso</div>
+                        <div class="stat-value">${pokemonData.weight / 10} kg</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Experiencia Base</div>
+                        <div class="stat-value">${pokemonData.base_experience || 'N/A'}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">HP</div>
+                        <div class="stat-value">${pokemonData.stats[0].base_stat}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Ataque</div>
+                        <div class="stat-value">${pokemonData.stats[1].base_stat}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Defensa</div>
+                        <div class="stat-value">${pokemonData.stats[2].base_stat}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error('Error al cargar detalles del Pokémon:', error);
+        modalBody.innerHTML = `
+            <div class="modal-pokemon">
+                <div style="text-align: center; color: white; padding: 40px;">
+                    <h3>Error al cargar los detalles</h3>
+                    <p>Intenta nuevamente</p>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Cerrar modal
+function closePokemonModal() {
+    pokemonModal.style.display = 'none';
 }
 
 // Actualizar controles de paginación
@@ -359,6 +550,25 @@ function clearFilters() {
     displayPokemon(filteredPokemon);
     showStatusMessage('Filtros limpiados - Mostrando todos los Pokémon', 'success');
     console.log('Filtros limpiados - Mostrando todos los Pokémon');
+}
+
+// Mostrar indicador de búsqueda en tiempo real
+function showSearchIndicator() {
+    let indicator = document.querySelector('.search-indicator');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.className = 'search-indicator';
+        document.querySelector('.search-section').appendChild(indicator);
+    }
+    indicator.textContent = 'Buscando...';
+    indicator.style.display = 'block';
+}
+
+function hideSearchIndicator() {
+    const indicator = document.querySelector('.search-indicator');
+    if (indicator) {
+        indicator.style.display = 'none';
+    }
 }
 
 // Función para mostrar mensaje de carga

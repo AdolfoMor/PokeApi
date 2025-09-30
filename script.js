@@ -45,6 +45,26 @@ const pokemonModal = document.getElementById('pokemonModal');
 const modalBody = document.getElementById('modalBody');
 const closeModal = document.querySelector('.close');
 const resultsCount = document.getElementById('resultsCount');
+const typeTranslations = {
+    'normal': 'Normal',
+    'fire': 'Fuego',
+    'water': 'Agua',
+    'electric': 'Eléctrico',
+    'grass': 'Planta',
+    'ice': 'Hielo',
+    'fighting': 'Lucha',
+    'poison': 'Veneno',
+    'ground': 'Tierra',
+    'flying': 'Volador',
+    'psychic': 'Psíquico',
+    'bug': 'Bicho',
+    'rock': 'Roca',
+    'ghost': 'Fantasma',
+    'dragon': 'Dragón',
+    'dark': 'Siniestro',
+    'steel': 'Acero',
+    'fairy': 'Hada'
+};
 
 
 // Inicializar la aplicación
@@ -111,10 +131,10 @@ function loadTypeFilter() {
     pokemonTypes.forEach(type => {
         const option = document.createElement('option');
         option.value = type;
-        option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+        option.textContent = typeTranslations[type]; // ← Usar traducción
         typeFilter.appendChild(option);
     });
-    console.log('Filtro de tipos cargado');
+    console.log('Filtro de tipos cargado en español');
 }
 
 async function loadAllPokemon() {
@@ -219,9 +239,9 @@ function displayPokemon(pokemonList) {
         const typeCell = document.createElement('td');
         pokemon.types.forEach(typeInfo => {
             const typeSpan = document.createElement('span');
-            typeSpan.textContent = typeInfo.type.name;
+            typeSpan.textContent = typeTranslations[typeInfo.type.name];
             typeSpan.className = `type-badge ${typeInfo.type.name}`;
-            typeSpan.title = `Tipo ${typeInfo.type.name}`;
+            typeSpan.title = `Tipo ${typeTranslations[typeInfo.type.name]}`;
             typeCell.appendChild(typeSpan);
         });
         
@@ -306,7 +326,7 @@ async function showPokemonDetails(pokemon) {
                 </div>
                 <div class="modal-types">
                     ${pokemonData.types.map(type => 
-                        `<span class="type-badge ${type.type.name}">${type.type.name}</span>`
+                        `<span class="type-badge ${type.type.name}">${typeTranslations[type.type.name]}</span>`
                     ).join('')}
                 </div>
                 <div class="modal-stats">

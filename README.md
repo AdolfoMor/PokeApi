@@ -1,18 +1,28 @@
-# PokeApi
+# Pokédex Interactiva
 Una aplicación web moderna que consume la **PokéAPI** para mostrar información de Pokémon con filtros avanzados y búsqueda en tiempo real.
+
+![Vista Principal](Img/Inicio.png)
 
 ---
 
 ## 🚀 Características
 
-- **Tabla completa** de Pokémon con imagen, nombre, tipo, peso, altura e ID  
-- **Búsqueda en tiempo real** por nombre de Pokémon  
-- **Filtros avanzados** por tipo y generación  
-- **Paginación** con navegación intuitiva  
-- **Diseño responsive** para todos los dispositivos  
-- **Modal de detalles** con información expandida  
-- **Contador dinámico** de resultados  
-- **Carga optimizada** con spinner de Pokébola  
+### 📊 Tabla de Pokémon Completa
+- **Imagen**: Sprite oficial de cada Pokémon
+- **Nombre**: Nombre en formato capitalizado
+- **Tipo**: Badges de colores para cada tipo (18 tipos disponibles)
+- **Peso y Altura**: Convertidos a unidades reales (kg y metros)
+- **ID**: Número de Pokédex con formato #001
+
+### 🔍 Sistema de Búsqueda
+- **Búsqueda en tiempo real**: Filtra mientras escribes
+- **Debounce automático**: Espera 500ms antes de buscar para optimizar rendimiento
+- **Búsqueda case-insensitive**: No importa mayúsculas/minúsculas
+
+### 🎯 Filtros Avanzados
+- **Filtro por Tipo**: 18 tipos diferentes (Agua, Fuego, Eléctrico, etc.)
+- **Filtro por Generación**: 9 generaciones desde Kanto hasta Paldea
+- **Combinación de filtros**: Puedes usar búsqueda + tipo + generación simultáneamente
 
 ---
 
@@ -28,64 +38,68 @@ La aplicación se conecta a la **PokéAPI**:
 
 ---
 
-## 🛠️ Funcionalidades Principales
+## 🛠️ ¿Cómo se usa?
 
-### 1. Carga Inicial
-```javascript
-loadAllPokemon()
+### 1. Barra de Búsqueda Principal
 
-// Obtiene el count total de Pokémon desde la API
-// Carga todos los datos en una sola petición
-// Muestra spinner de carga durante el proceso
-// Ordena Pokémon por ID numérico
-```
+- **Campo de texto**: Escribe cualquier nombre (ej: "pikachu", "char")
+- **Buscar en tiempo real**: Empieza a filtrar automáticamente al escribir
+- **Botón BUSCAR**: Fuerza la búsqueda manual
+- **Botón LIMPIAR**: Borra búsqueda y muestra todos los Pokémon
+
+**Ejemplos de búsqueda:**
+- `pika` → Encuentra "Pikachu", "Raichu", "Pikachu-Belleza"
+- `char` → "Charmander", "Charmeleon", "Charizard"
+- `mew` → "Mew", "Mewtwo"
+
+![busqueda](Img/mew.png)
 
 ### 2. Sistema de Filtros
-```javascript
-applyFilters()
 
-// Búsqueda por nombre con debounce de 500ms
-// Filtro por tipo: 18 tipos disponibles
-// Filtro por generación: 9 generaciones (Kanto → Paldea)
-```
+#### Filtro por Tipo:
+
+- Selecciona un tipo para ver solo Pokémon de ese tipo
+- Ej: "Agua" muestra solo Pokémon tipo agua
+- Se combina con la búsqueda por nombre
+
+![tipo](Img/grass.png)
+
+#### Filtro por Generación:
+
+**Cómo usar:**
+- Filtra por región/generación del anime/juego
+- Útil para fans de generaciones específicas
+
+![generacion](Img/generacion.png)
 
 ### 3. Paginación
-```javascript
-displayPokemonPage()
 
-// Muestra 20 Pokémon por página
-// Navegación con botones anterior/siguiente
-// Cálculo automático de páginas totales
-```
+**Cómo funciona:**
+- **← Anterior**: Ve a la página anterior (deshabilitado en página 1)
+- **Página X de Y**: Tu posición actual y total de páginas
+- **Siguiente →**: Ve a la página siguiente (deshabilitado en última página)
+
+
+![paginacion](Img/paginacion.png)
 
 ### 4. Modal de Detalles
-```javascript
-showPokemonDetails(pokemon)
 
-// Muestra arte oficial del Pokémon
-// Estadísticas completas (HP, Ataque, Defensa, etc.)
-// Información detallada de tipos y características
-```
+**Contenido del modal:**
+- **Imagen grande**: Arte oficial o sprite HD
+- **Tipos**: Badges igual que en la tabla
+- **Estadísticas base**: HP, Ataque, Defensa, Experiencia base
+- **Características físicas**: Peso y altura
 
-### 5. Gestión de Estado
-```javascript
-// Variables globales principales
-let allPokemon = [];        // Todos los Pokémon cargados
-let filteredPokemon = [];   // Pokémon filtrados actualmente
-let currentPage = 1;        // Página actual
-const pokemonCache = {};    // Cache para evitar peticiones duplicadas
-```
+**Cómo usar:**
+- Dar clic sobre un registro
 
----
+**Cómo cerrar:**
+- Botón `X` en la esquina superior derecha
+- Clic fuera del modal
+- Tecla `ESC` del teclado
 
-## 📁 Estructura de Archivos
-```text
-pokemon-app/
-├── index.html          # Estructura principal
-├── style.css           # Estilos y diseño responsive
-├── script.js           # Lógica de la aplicación
-└── README.md           # Este archivo
-```
+![modal](Img/modal.png)
+
 
 ---
 

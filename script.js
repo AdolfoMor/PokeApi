@@ -442,9 +442,10 @@ function clearFilters() {
     generationFilter.value = '';
     currentPage = 1;
     filteredPokemon = [...allPokemon];
-    displayPokemon(filteredPokemon);
+    displayPokemonPage();
     showStatusMessage('Filtros limpiados - Mostrando todos los Pokémon', 'success');
     console.log('Filtros limpiados - Mostrando todos los Pokémon');
+    updateResultsCounter();
 }
 
 // Mostrar indicador de búsqueda en tiempo real

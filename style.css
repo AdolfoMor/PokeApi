@@ -240,35 +240,59 @@ tr:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px;
+    gap: 15px;
     margin-top: 20px;
 }
 
-#pageInfo {
-    color: white;
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-
 .pagination-controls button {
-    padding: 10px 20px;
-    background-color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.9);
     color: #4a6fa5;
     border: 2px solid #4a6fa5;
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    justify-content: center;
 }
 
 .pagination-controls button:hover:not(:disabled) {
-    background-color: #4a6fa5;
+    background: #4a6fa5;
     color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 111, 165, 0.3);
 }
 
 .pagination-controls button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    background-color: #ccc;
+    background: #ccc;
     border-color: #999;
     color: #666;
+    transform: none;
+    box-shadow: none;
 }
+
+.pagination-arrow {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+#pageInfo {
+    color: white;
+    font-weight: bold;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px 16px;
+    border-radius: 20px;
+    min-width: 120px;
+    text-align: center;
+}
+
 
 /* Mensajes de estado */
 .status-message {
@@ -638,13 +662,20 @@ tr:hover {
     
 }
 @media (max-width: 480px) {
-    .search-section {
-        flex-direction: column;
+    .pagination-controls {
+        gap: 10px;
     }
     
-    .pagination-controls {
-        flex-direction: column;
-        gap: 10px;
+    .pagination-controls button {
+        min-width: 100px;
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+    
+    #pageInfo {
+        min-width: 100px;
+        font-size: 0.9rem;
+        padding: 6px 12px;
     }
     
     .table-container {

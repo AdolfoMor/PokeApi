@@ -1,6 +1,10 @@
 # Pokédex Interactiva
 Una aplicación web moderna que consume la **PokéAPI** para mostrar información de Pokémon con filtros avanzados y búsqueda en tiempo real.
 
+## Puede acceder a la aplicación dando clic en el siguiente enlace
+
+[https://www.pokeapi-semujer.duckdns.org/](https://www.pokeapi-semujer.duckdns.org/)
+
 ![Vista Principal](Img/Inicio.png)
 
 ---
